@@ -21,3 +21,8 @@ class Properties(IntEnum):
     TOTAL_SUSPENDED_SOLIDS = 17
     TURBIDITY = 18
     WATER_TEMPERATURE  = 19
+
+class Organization(IntEnum):
+    UNKNOWN = 0
+    CMC = 1
+    CBP = 2
