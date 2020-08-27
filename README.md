@@ -8,7 +8,7 @@ Please follow [Anaconda's Installation Documentation](https://docs.anaconda.com/
 
 #### Create Environment
 
-After installing Anaconda, create the Anaconda environment by executing the following command in a terminal in this repository's python directory.
+After installing Anaconda, navigate to the `python` directory of this repository, and create the Anaconda environment by executing the following command in a terminal.
 ```
 conda env create -f environment.yml
 ```
