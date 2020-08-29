@@ -1,6 +1,6 @@
 # Hack The Bay Challenge 2
 
-## Installation The Application
+## Installing The Application
 ### Anaconda
 
 #### Anaconda Installation
@@ -8,25 +8,24 @@ Please follow [Anaconda's Installation Documentation](https://docs.anaconda.com/
 
 #### Create Environment
 
-After installing Anaconda, navigate to the `python` directory of this repository, and create the Anaconda environment by executing the following command in a terminal.
+After installing Anaconda, navigate to the `src` directory of this repository, and create the Anaconda environment by executing the following command in a terminal.
 ```
 conda env create -f environment.yml
 ```
 
 #### Activate Environment
 
-After creating the Anaconda environment, activate the Anaconda environment by executing the following command in a terminal in this repository's python directory.
+After creating the Anaconda environment, navigate to the `src` directory of this repository and activate the Anaconda environment by executing the following command in a terminal.
 ```
 conda activate hackthebay
 ```
 -------------------------------------------
 ## Running The Application
 ### Starting the Dash Application
-After following the installation steps, open the ***Anaconda command prompt*** and from the repository's python directory execute the following command.
+After following the installation steps, open the ***Anaconda command prompt***, navigate to the repository's `src` directory, and execute the following command.
 ```
-python app.py
+python index.py
 ```
-*Please note the application may take a few minutes to start while processing data.*
 
 ### Viewing the Dash Application
 After starting the Dash application, open a browser and navigate to [http://127.0.0.1:8050/](http://127.0.0.1:8050/)
@@ -44,6 +43,6 @@ After starting the Dash application, open a browser and navigate to [http://127.
 ### Datasets
 ### Libraries
 * *Dash* (1.4.1). (2020). [Web App Data Visualization Framework]. Plotly. https://plotly.com/dash/
-* *GeoPandas* (0.8.1). (2020). [Geographical Table Data Processing Framework]. Plotly. https://geopandas.org/
-* *Pandas* (1.0.5). (2020). [Table Data Processing Framework]. Plotly. https://pandas.pydata.org/
+* *GeoPandas* (0.8.1). (2020). [Geographical Table Data Processing Framework]. https://geopandas.org/
+* *Pandas* (1.0.5). (2020). [Table Data Processing Framework]. https://pandas.pydata.org/
 * *Plotly* (4.9.0). (2020). [Data Visualization Framework]. Plotly. https://plotly.com/python/

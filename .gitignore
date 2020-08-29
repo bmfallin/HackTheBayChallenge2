@@ -103,5 +103,11 @@ dist
 # TernJS port file
 .tern-port
 
-
+# ignore pycache
 *__pycache__*
+
+#ignore IIS web files
+web.config
+
+#ignore vscode settings
+.vscode

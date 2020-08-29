@@ -117,5 +117,3 @@ dependencies:
     - matplotlib==3.3.0
     - pillow==7.2.0
     - plotly==4.9.0
-prefix: C:\Users\brand\.conda\envs\hackthebay
-
