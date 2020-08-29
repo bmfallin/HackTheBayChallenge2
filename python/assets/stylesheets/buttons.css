@@ -1,0 +1,27 @@
+.button {
+    box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.14);
+    border: none;
+    padding: 12px 30px 12px 30px;
+    color: var(--primary-font-color);
+    border-radius: 4px;
+    background-color: var(--primary-color-dark);
+}
+
+.button:hover {
+    box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.2);
+    background-color: var(--primary-color);
+    transition: box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+.button:focus {
+    outline: none;
+}
+
+.button:active {
+    box-shadow: none;
+    outline: none;
+}
+
+.search-button-container {
+    text-align: center !important;
+}

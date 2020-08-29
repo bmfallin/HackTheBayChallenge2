@@ -1,0 +1,37 @@
+.Select--multi .Select .Select-control {
+    box-shadow: none !important;
+    outline: none !important;
+    border-color: rgb(214, 214, 214) !important;
+}
+
+.Select .is-focused .Select-control {
+    box-shadow: none !important;
+    outline: none !important;
+    border-color: rgb(214, 214, 214) !important;
+}
+
+.Select--multi .Select-value {
+    border: none !important;
+}
+
+.Select--multi .Select-value-icon {
+    background-color: var(--primary-color-dark);
+    color: var(--primary-font-color);
+    border: none !important;
+}
+
+.Select--multi .Select-value-icon:hover {
+    background-color: var(--primary-color) !important;
+    color: var(--primary-font-color) !important;
+    border: none !important;
+}
+
+.Select--multi .Select-value-label {
+    background-color: var(--primary-color-dark);
+    color: var(--primary-font-color);
+    border: none !important;
+}
+
+.Select-menu-outer div > div > div > div > div:hover {
+    background-color: var(--primary-color-light-2);
+}

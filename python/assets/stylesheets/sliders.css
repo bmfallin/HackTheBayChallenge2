@@ -1,0 +1,19 @@
+.rc-slider {}
+
+.rc-clider-rail {
+    background-color: var(--primary-color-light);
+}
+.rc-slider-track {
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-color-dark) 100%);
+}
+.rc-slider-handle {
+    border-color: var(--primary-color-dark);
+}
+
+.rc-slider-handle:hover {
+    border-color: var(--primary-color-dark);
+}
+
+.rc-slider-handle:focus {
+    outline: none;
+}
