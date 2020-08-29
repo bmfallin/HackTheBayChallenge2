@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from enum import IntEnum
 import dash
 import dash_table
 import dash_core_components as dcc
@@ -8,7 +9,7 @@ from dash.dependencies import Input, Output, State
 import plotly.figure_factory as ff
 import plotly.express as px
 
-from enums import Properties, Organization
+from enums import Properties, Organization, DateRangeType
 
 from app import app, station_gaps_df, stations_df, mapbox_token
 
@@ -32,27 +33,17 @@ COLUMNS = [
     "HUC12Number"
 ]
 
+property_options = map(lambda x: {
+        "label": str(x),
+        "value": x.value
+    }, Properties)
+
+date_range_options = map(lambda x: {
+        "label": str(x),
+        "value": x.value
+    }, DateRangeType)
 
 
-def get_prop_name(value: Properties) -> str:
-    if value == Properties.E_COLI:
-        return "E.Coli"
-
-    if value == Properties.PH:
-        return "pH"
-
-    return value.name.replace("_", " ").title()
-
-# Create a list of properties for our dropdown
-property_options = []
-for prop in Properties:
-    if prop == Properties.UNKNOWN:
-        continue
-
-    property_options.append({
-        "label": get_prop_name(prop),
-        "value": prop.value
-    })
 
 
 layout = [
@@ -69,25 +60,9 @@ layout = [
                     dcc.Dropdown(
                         id="station-property-dropdown",
                         multi=True,
-                        value=[1],
-                        options=property_options,
-                    )
-                ]
-            ),
-            html.Div(
-                id="station-organization-container",
-                className="form-control lg-3 md-6 sm-12 xs-12",
-                children = [
-                    html.H4(children="Organization"),
-                    html.P("The organization to search", className="description"),
-                    dcc.RadioItems(
-                        id="station-organization-radio-buttons",
-                        options=[
-                            {'label': 'CMC', 'value': Organization.CMC.value},
-                            {'label': 'CBP', 'value': Organization.CBP.value},
-                            {'label': 'Both', 'value': Organization.UNKNOWN.value}
-                        ],
-                        value=Organization.UNKNOWN.value
+                        value=[Properties.WATER_TEMPERATURE.value],
+                        options=[{"label": str(x), "value": x.value } for x in Properties if x != Properties.UNKNOWN],
+                        clearable=False
                     )
                 ]
             ),
@@ -103,10 +78,26 @@ layout = [
                         max_date_allowed=datetime.now(),
                         initial_visible_month=datetime.now(),
                         start_date=datetime(2012, 1, 1).date(),
-                        end_date=datetime(2019, 12, 31).date()
+                        end_date=datetime(2019, 12, 31).date(),
+                        clearable=False
                     )
                 ]
             ),
+            html.Div(
+                id="station-daterange-type-container",
+                className="form-control lg-3 md-6 sm-12 xs-12",
+                children = [
+                    html.H4(children="Date Range Type"),
+                    html.P("The type of date range search to use", className="description"),
+                    dcc.Dropdown(
+                        id="station-date-range-dropdown",
+                        options= [{"label": str(x), "value": x.value } for x in DateRangeType if x != DateRangeType.UNKNOWN],
+                        value=DateRangeType.BETWEEN_DATE_RANGE.value,
+                        clearable=False
+                    )
+                ]
+            ),
+
             html.Div(
                 id="station-gapthreshold-container",
                 className="form-control lg-3 md-6 sm-12 xs-12",
@@ -217,60 +208,21 @@ def set_gap_limit(start_date, end_date, value):
 
 
 @app.callback(
-    [
-        Output(component_id='station-chart-2', component_property='figure'),
-        Output(component_id='station-chart-2', component_property='title'),
-    ],
-    [ 
-        Input(component_id='station-chart-1', component_property='selectedData')
-    ],
-    [
-        State(component_id='station-property-dropdown', component_property='value'),
-        State(component_id='station-organization-radio-buttons', component_property='value'),
-        State(component_id='station-daterange-picker', component_property='start_date'),
-        State(component_id='station-daterange-picker', component_property='end_date'),
-        State(component_id='station-gap-threshold', component_property='value'),
-    ]
-)
-def display_timeline(selected_stations, properties, organization, start_date, end_date, gap_threshold):
-
-    df = filter_df(properties, organization, start_date, end_date, gap_threshold)
-
-    # Combine All Stations
-    stations = []
-    for point in selected_stations["points"]:
-        stations.append(point["customdata"][0])
-
-    # Filter Stations
-    df = df[df['StationCode'].isin(stations)]
-
-    df["Task"] = df.apply(lambda row: f"{row.StationCode}: {row.PropertyName}", axis = 1)
-    figure = ff.create_gantt(df, group_tasks=True)
-
-    title = f"Time gaps over {gap_threshold} day(s) between {start_date} and {end_date}"
-
-    return figure, title
-
-
-@app.callback(
-    [
-        Output(component_id='station-chart-1', component_property='figure'),
-        Output(component_id='station-chart-1', component_property='title'),
-    ],
+    Output(component_id='station-chart-1', component_property='figure'),
     [ 
         Input(component_id='station-search-button', component_property='n_clicks')
     ],
     [
         State(component_id='station-property-dropdown', component_property='value'),
-        State(component_id='station-organization-radio-buttons', component_property='value'),
         State(component_id='station-daterange-picker', component_property='start_date'),
         State(component_id='station-daterange-picker', component_property='end_date'),
+        State(component_id='station-date-range-dropdown', component_property='value'),
         State(component_id='station-gap-threshold', component_property='value'),
     ]
 )
-def display_map(clicks, properties, organization, start_date, end_date, gap_threshold):
+def display_map(clicks, properties, start_date, end_date, date_range_type, gap_threshold):
 
-    df = filter_df(properties, organization, start_date, end_date, gap_threshold)
+    df = filter_df(properties, start_date, end_date, date_range_type, gap_threshold)
     
     df["Days"] = df["Elapsed"].dt.days
     
@@ -286,9 +238,44 @@ def display_map(clicks, properties, organization, start_date, end_date, gap_thre
     )
     fig.update_layout(mapbox=dict(accesstoken=mapbox_token))
     
-    title = f"Time gaps over {gap_threshold} day(s) between {start_date} and {end_date}"
+    title = get_chart_gap_title(start_date, end_date, gap_threshold, date_range_type)
+    fig.update_layout(title=title)
 
-    return fig, title
+    return fig
+
+
+@app.callback(
+    Output(component_id='station-chart-2', component_property='figure'),
+    [ 
+        Input(component_id='station-chart-1', component_property='selectedData')
+    ],
+    [
+        State(component_id='station-property-dropdown', component_property='value'),
+        State(component_id='station-daterange-picker', component_property='start_date'),
+        State(component_id='station-daterange-picker', component_property='end_date'),
+        State(component_id='station-date-range-dropdown', component_property='value'),
+        State(component_id='station-gap-threshold', component_property='value'),
+    ]
+)
+def display_timeline(selected_stations, properties, start_date, end_date, date_range_type, gap_threshold):
+
+    df = filter_df(properties, start_date, end_date, date_range_type, gap_threshold)
+
+    # Combine All Stations
+    stations = []
+    for point in selected_stations["points"]:
+        stations.append(point["customdata"][0])
+
+    # Filter Stations
+    df = df[df['StationCode'].isin(stations)]
+
+    df["Task"] = df.apply(lambda row: f"{row.StationCode}: {row.PropertyName}", axis = 1)
+    fig = ff.create_gantt(df, group_tasks=True)
+
+    title = get_chart_gap_title(start_date, end_date, gap_threshold, date_range_type)
+    fig.update_layout(title=title)
+
+    return fig
 
 
 @app.callback(
@@ -300,15 +287,15 @@ def display_map(clicks, properties, organization, start_date, end_date, gap_thre
     ],
     [
         State(component_id='station-property-dropdown', component_property='value'),
-        State(component_id='station-organization-radio-buttons', component_property='value'),
         State(component_id='station-daterange-picker', component_property='start_date'),
         State(component_id='station-daterange-picker', component_property='end_date'),
+        State(component_id='station-date-range-dropdown', component_property='value'),
         State(component_id='station-gap-threshold', component_property='value'),
     ]
 )
-def update_table(clicks, page_current, page_size, properties, organization, start_date, end_date, gap_threshold):
+def update_table(clicks, page_current, page_size, properties, start_date, end_date, date_range_type, gap_threshold):
 
-    df = filter_df(properties, organization, start_date, end_date, gap_threshold)
+    df = filter_df(properties, start_date, end_date, date_range_type, gap_threshold)
     
     # reorder columns
     df = df[COLUMNS]
@@ -317,18 +304,44 @@ def update_table(clicks, page_current, page_size, properties, organization, star
     return df.iloc[page_current*page_size:(page_current+ 1)*page_size].to_dict('records')
 
 
-def filter_df(properties, organization, start_date, end_date, gap_threshold):
+
+def get_chart_gap_title(start_date, end_date, gap_threshold, date_range_type):
+
+    if gap_threshold > 1:
+        gap_timespan = f"{gap_threshold} days"
+    else:
+        gap_timespan = f"{gap_threshold} day"
+
+    start_string = datetime.strptime(start_date, "%Y-%m-%d").strftime("%m/%d/%Y")
+    end_string = datetime.strptime(end_date, "%Y-%m-%d").strftime("%m/%d/%Y")
+
+    if date_range_type == DateRangeType.BETWEEN_DATE_RANGE:
+        search_type = "between"
+    else:
+        search_type = "overlapping"
+
+    return f"Time gaps greater than {gap_timespan} {search_type} date range {start_string} - {end_string}"
+
+
+def filter_df(properties, start_date, end_date, date_range_type, gap_threshold):
 
     df = station_gaps_df
-    start_filter = (df["Start"] >= start_date)
-    end_filter = (df["Finish"] <= end_date)
+
+    if date_range_type == DateRangeType.BETWEEN_DATE_RANGE:
+        date_filter = (df["Start"] >= start_date) & (df["Finish"] <= end_date)
+    else:
+        date_filter = (df["Start"] <= end_date) & (df["Finish"] >= start_date)
+
+
     elapsed_filter = (df["Elapsed"] >= timedelta(days=gap_threshold))
 
-    df = df[start_filter & end_filter & elapsed_filter]
+    df = df[date_filter & elapsed_filter]
 
     df = df[df['PropertyValue'].isin(properties)]
 
+    """
     if organization != Organization.UNKNOWN.value:
         df = df[(df["Organization"] == organization)]
+    """
 
     return df

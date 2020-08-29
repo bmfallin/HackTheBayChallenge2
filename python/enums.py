@@ -22,7 +22,26 @@ class Properties(IntEnum):
     TURBIDITY = 18
     WATER_TEMPERATURE  = 19
 
+    def __str__(self):
+        if self == Properties.E_COLI:
+            return "E.Coli"
+
+        if self == Properties.PH:
+            return "pH"
+
+        return self.name.replace("_", " ").title()
+
+
 class Organization(IntEnum):
     UNKNOWN = 0
     CMC = 1
     CBP = 2
+
+
+class DateRangeType(IntEnum):
+    UNKNOWN = 0
+    BETWEEN_DATE_RANGE = 1
+    OVERLAPPING_DATE_RANGE = 2
+
+    def __str__(self):
+        return self.name.replace("_", " ").capitalize()
