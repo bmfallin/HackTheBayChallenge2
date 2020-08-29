@@ -1,0 +1,17 @@
+.CalendarDay__selected_start,
+.CalendarDay__selected_end {
+    background-color: var(--primary-color-dark);
+    border-color: var(--primary-color-dark);
+}
+
+.CalendarDay__selected_span {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color-dark);
+}
+
+.CalendarDay__selected_start:hover,
+.CalendarDay__selected_span:hover,
+.CalendarDay__selected_end:hover {
+    background-color: var(--primary-color-light);
+    border-color: var(--primary-color-dark);
+}

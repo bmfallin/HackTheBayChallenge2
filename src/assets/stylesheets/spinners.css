@@ -1,0 +1,9 @@
+/* Spinners */
+.dash-spinner {
+    margin-top:0px !important;
+    margin-bottom:0px !important;
+}
+
+.dash-spinner > div {
+    background: linear-gradient(180deg, var(--primary-color) 0%, var(--primary-color-dark) 100%);
+}

@@ -1,0 +1,11 @@
+.dash-spreadsheet-container .dash-header {
+    background-color: #ddd !important;
+}
+
+.dash-spreadsheet-container .dash-cell-value {
+    font-weight: 300 !important;
+}
+
+.dash-spreadsheet-container tr:nth-child(odd) > td {
+    background-color: #f1f1f1 !important;
+}

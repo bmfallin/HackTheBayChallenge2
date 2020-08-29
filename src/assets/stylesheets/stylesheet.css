@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700&display=swap');
+
+:root {
+    --primary-font-color: rgb(255, 255, 255);
+    --description-color: lightgrey;
+
+    --primary-color: rgb(100, 186, 191);
+    --primary-color-dark: rgb(9, 137, 158);
+    --primary-color-light: rgb(157, 209, 213);
+    --primary-color-light-2: rgb(210, 234, 236);
+
+    --secondary-color: rgb(234, 141, 79);
+    --secondary-color-dark: rgb(226, 114, 36);
+    --secondary-color-light: rgb(241, 170, 128);
+}
+
+* {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 400;
+}
+
+body {
+    margin: 0px;
+    width:100%;
+    background-color: rgb(238,238,238);
+}
+
+.container {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+}
+
+/* Large */
+.lg-12 { grid-column: span 12; }
+.lg-9 { grid-column: span 9; }
+.lg-8 { grid-column: span 8; }
+.lg-6 { grid-column: span 6; }
+.lg-4 { grid-column: span 4; }
+.lg-3 { grid-column: span 3; }
+.lg-2 { grid-column: span 2; }
+.lg-1 { grid-column: span 1; }
+
+/* Medium */
+@media screen and (max-width: 992px) {
+    .md-12 { grid-column: span 12; }
+    .md-9 { grid-column: span 9; }
+    .md-8 { grid-column: span 8; }
+    .md-6 { grid-column: span 6; }
+    .md-4 { grid-column: span 4; }
+    .md-3 { grid-column: span 3; }
+    .md-2 { grid-column: span 2; }
+    .md-1 { grid-column: span 1; }
+}
+
+/* Small */
+@media screen and (max-width: 768px) {
+    .sm-12 { grid-column: span 12; }
+    .sm-9 { grid-column: span 9; }
+    .sm-8 { grid-column: span 8; }
+    .sm-6 { grid-column: span 6; }
+    .sm-4 { grid-column: span 4; }
+    .sm-3 { grid-column: span 3; }
+    .sm-2 { grid-column: span 2; }
+    .sm-1 { grid-column: span 1; }
+}
+
+/* Extra Small */
+@media screen and (max-width: 480px) {
+    .xs-12 { grid-column: span 12; }
+    .xs-9 { grid-column: span 9; }
+    .xs-8 { grid-column: span 8; }
+    .xs-6 { grid-column: span 6; }
+    .xs-4 { grid-column: span 4; }
+    .xs-3 { grid-column: span 3; }
+    .xs-2 { grid-column: span 2; }
+    .xs-1 { grid-column: span 1; }
+}
+
+.tile {
+    margin: 10px;
+    padding: 10px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.14);
+    border-radius: 6px;
+}
+
+
+.form-control {
+    padding: 10px;
+}
+
+.form-control > h4 {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+
+
+.description {
+    font-style: italic;
+    color: var(--description-color);
+    font-size: 12px;
+    font-weight: 300;
+}
+
+/* Input */
+.input {
+    width: calc(100% - 7px);
+    padding: 7px;
+    border: 1px solid var(--description-color);
+    border-radius: 3px;
+    font-size: 16px;
+}
+
+::placeholder {
+    color: var(--description-color);
+}
