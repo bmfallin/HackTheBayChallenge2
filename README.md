@@ -6,6 +6,9 @@
 #### Anaconda Installation
 Please follow [Anaconda's Installation Documentation](https://docs.anaconda.com/anaconda/install/) for your platform
 
+### Python Version
+Please make sure you are using Python version 3.8.5. Parts of the code rely on features introducted in some of the most recent versions of Python so this step is key to get the app to work locally. You can download this latest version (as of August 30, 2020) version of Python [here](https://www.python.org/downloads/).
+
 #### Create Environment
 
 After installing Anaconda, navigate to the `src` directory of this repository, and create the Anaconda environment by executing the following command in a terminal.
