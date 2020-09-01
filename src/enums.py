@@ -37,6 +37,9 @@ class Organization(IntEnum):
     CMC = 1
     CBP = 2
 
+    def __str__(self):
+        return self.name
+
 
 class DateRangeType(IntEnum):
     UNKNOWN = 0
@@ -45,3 +48,31 @@ class DateRangeType(IntEnum):
 
     def __str__(self):
         return self.name.replace("_", " ").capitalize()
+
+
+class ChartType(IntEnum):
+    UNKNOWN = 0
+    COVERAGE_TIMESPANS_OVER_GAP_THRESHOLD = 1
+    COVERAGE_TIMESPANS_UNDER_GAP_THRESHOLD = 2
+    COLLECTION_DATES = 3
+
+    def __str__(self):
+        return self.name.replace("_", " ").capitalize()
+
+class Months(IntEnum):
+    UNKNOWN = 0
+    JANUARY = 1
+    FEBRUARY = 2
+    MARCH = 3
+    APRIL = 4
+    MAY = 5
+    JUNE = 6
+    JULY = 7
+    AUGUST = 8
+    SEPTEMBER = 9
+    OCTOBER = 10
+    NOVEMBER = 11
+    DECEMBER = 12
+
+    def __str__(self):
+        return self.name.capitalize()

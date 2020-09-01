@@ -5,7 +5,9 @@
     --description-color: lightgrey;
 
     --primary-color: rgb(100, 186, 191);
+    --primary-color-transparent: rgba(100, 186, 191, 0.8);
     --primary-color-dark: rgb(9, 137, 158);
+    --primary-color-dark-transparent: rgba(9, 137, 158, 0.8);
     --primary-color-light: rgb(157, 209, 213);
     --primary-color-light-2: rgb(210, 234, 236);
 
@@ -114,4 +116,12 @@ body {
 
 ::placeholder {
     color: var(--description-color);
+}
+
+
+
+#year-slider {
+    margin: auto;
+    margin-bottom: 50px;
+    width: 95%;
 }

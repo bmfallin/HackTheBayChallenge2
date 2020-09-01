@@ -1,21 +1,22 @@
-from datetime import datetime, timedelta
-import numpy as np
-import pandas as pd
-import geopandas as gpd
 import multiprocessing as mp
 import re
-from typing import List
-from enums import Properties, Organization
+from datetime import datetime, timedelta
 from os import path
+from typing import List
+
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+
+from enums import Organization, Properties
 
 
-def __add_features_to_geo_dataframe(df):
+def __add_features_to_geo_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df["geometry"] = df.geometry.simplify(tolerance=0.01, preserve_topology=True)
     return df
 
 
-def __add_features_to_huc_gap_dataframe(df):
-    df["PropertyName"] = df.apply(lambda row: Properties(row.PropertyValue).name, axis = 1)
+def __add_features_to_huc_gap_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df["HUC12"] = df.apply(lambda row: f"0{row.HUC12_}", axis = 1)
     df["Start"] = pd.to_datetime(df["Start"])
     df["Finish"] = pd.to_datetime(df["Finish"])
@@ -23,18 +24,19 @@ def __add_features_to_huc_gap_dataframe(df):
     return df
 
 
-def __add_features_to_station_gap_dataframe(df):
-    df["PropertyName"] = df.apply(lambda row: Properties(row.PropertyValue).name, axis = 1)
+def __add_features_to_station_gap_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df["Start"] = pd.to_datetime(df["Start"])
     df["Finish"] = pd.to_datetime(df["Finish"])
     df["Elapsed"] = df.apply(lambda row: row.Finish - row.Start, axis = 1)
     return df
 
 
-def __add_features_to_water_dataframe(df):
+def __add_features_to_water_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df["Property"] = df.apply(lambda row: int(__get_common_prop(row.ParameterName_CBP, row.ParameterName_CMC).value), axis = 1)
+    df["PropertyName"] = df.apply(lambda row: str(Properties(row.Property)) , axis = 1)
     df["DateTime"] = pd.to_datetime(df['Date'] + ' ' + df['Time'])
     df["Organization"] = df.apply(lambda row: int(Organization.CMC.value) if row.Database == "CMC" else int(Organization.CBP.value) , axis = 1)
+    df["OrganizationName"] = df.apply(lambda row: str(Organization(row.Organization)) , axis = 1)
     return df
 
 
@@ -43,10 +45,20 @@ def __create_dataframes():
     water_df = load_water_dataframe()
     geo_df = load_geo_dataframe()
 
+    # Summary DF
+    sdf = water_df[["Organization", "OrganizationName", "DateTime", "Station", "StationCode", "StationName", "Latitude", "Longitude", "HUC12_", "HUCNAME_", "COUNTY_", "STATE_", "Property", "PropertyName"]]
+    sdf = sdf.rename(columns={
+        "HUC12_": "HUC12",
+        "HUCNAME_": "HUCName",
+        "STATE_": "State",
+        "COUNTY_": "County"
+    })
+    sdf.to_pickle("..\\data\\compressed\\summary.pkl.gzip", compression="gzip")
+
+    # HUC12 Gaps
     start = min(water_df["DateTime"])
     end = max(water_df["DateTime"])
-    join_df = water_df[["Station", "StationCode", "StationName", "Latitude", "Longitude", "HUC12_", "HUCNAME_", "COUNTY_", "STATE_", "Organization"]]
-
+    join_df = water_df[["Station", "StationCode", "StationName", "Latitude", "Longitude", "HUC12_", "HUCNAME_", "COUNTY_", "STATE_"]]
     huc_gaps_df = __create_dataframe_from_gaps(water_df, "HUC12_", geo_df["HUC12"], start, end, __add_features_to_huc_gap_dataframe)
     huc_join_df = join_df.groupby(["HUC12_"]).first().reset_index()
     huc_gaps_df = pd.merge(huc_gaps_df, huc_join_df, on="HUC12_", how="left")
@@ -58,8 +70,9 @@ def __create_dataframes():
         "STATE_": "State",
         "COUNTY_": "County"
     })
-    huc_gaps_df.to_csv("..\\data\\huc12_gaps.csv")
+    huc_gaps_df.to_pickle("..\\data\\compressed\\huc_gaps.pkl.gzip", compression="gzip")
 
+    # Station Gaps
     codes = water_df["StationCode"].unique()
     codes = [c for c in codes if str(c) != "nan"]
     station_gaps_df = __create_dataframe_from_gaps(water_df, "StationCode", codes, start, end, __add_features_to_station_gap_dataframe)
@@ -71,7 +84,7 @@ def __create_dataframes():
         "STATE_": "State",
         "COUNTY_": "County"
     })
-    station_gaps_df.to_csv("..\\data\\station_gaps.csv")
+    station_gaps_df.to_pickle("..\\data\\compressed\\station_gaps.pkl.gzip", compression="gzip")
 
     stations_df = join_df.groupby(["StationCode"]).first().reset_index()
     stations_df = stations_df.rename(columns={
@@ -80,7 +93,7 @@ def __create_dataframes():
         "STATE_": "State",
         "COUNTY_": "County"
     })
-    stations_df.to_csv("..\\data\\stations.csv")
+    stations_df.to_pickle("..\\data\\compressed\\stations.pkl.gzip", compression="gzip")
 
 
 def __create_dataframe_from_gaps(df, field_name, unique_fields, start, end, add_features):
@@ -94,10 +107,14 @@ def __create_dataframe_from_gaps(df, field_name, unique_fields, start, end, add_
     pool = mp.Pool(mp.cpu_count())
 
     # 
-    for field in unique_fields:
-        fdf = df[df[field_name] == field]
-        f = pool.apply_async(__find_gaps, [fdf, start, end, field_name, field])
-        funclist.append(f)
+    for org in Organization:
+        if org == Organization.UNKNOWN:
+            continue
+
+        for field in unique_fields:
+            fdf = df[(df[field_name] == field) & (df["Organization"] == org.value)]
+            f = pool.apply_async(__find_gaps, [fdf, start, end, field_name, field, org])
+            funclist.append(f)
 
     # Combine our results
     for f in funclist:
@@ -112,16 +129,19 @@ def __create_dataframe_from_gaps(df, field_name, unique_fields, start, end, add_
     return gaps_df
 
 
-def __create_gap(start, end, prop, name, value):
+def __create_gap(start: str, end: str, prop: str, org: int, name: str, value: str) -> {}:
     return {
         "Start": start,
         "Finish": end,
-        "PropertyValue": prop,
+        "Property": prop,
+        "PropertyName": str(Properties(prop)),
+        "Organization": org,
+        "OrganizationName": str(Organization(org)),
         name: value
     }
 
 
-def __find_gaps(df, start, end, name, value):
+def __find_gaps(df: pd.DataFrame, start: str, end: str, name: str, value: str, org: int) -> []:
 
     # Declare gaps we will return
     gap_list = []
@@ -139,7 +159,7 @@ def __find_gaps(df, start, end, name, value):
 
         # If we have no rows then there is no coverage for this property in this region
         if len(df) == 0:
-            gap_list.append(__create_gap(start, end, prop, name, value))
+            gap_list.append(__create_gap(start, end, prop, org, name, value))
 
         else:
             # Create a temporary dataframe to hold our start date
@@ -159,7 +179,7 @@ def __find_gaps(df, start, end, name, value):
             for index, gap in time_gaps.iteritems():
                 start = df["DateTime"][index - 1]
                 end = df["DateTime"][index]
-                gap_list.append(__create_gap(start, end, prop, name, value))
+                gap_list.append(__create_gap(start, end, prop, org, name, value))
 
     # return gaps to the caller
     return gap_list
@@ -234,12 +254,19 @@ def __get_common_prop(cbp_name: str, cmc_name: str) -> Properties:
     return Properties.UNKNOWN
 
 
+def __load_pickle(path: str) -> pd.DataFrame:
+    print(f"Loading {path}")
+    df = pd.read_pickle(path, compression="gzip")
+    print(f"Finished loading {path}")
+    return df
+
+
 def __multi_regex(regex: str, strings: List[str]) -> bool:
     """Performs a regex search on all of the strings in the list and returns true if there are any matches"""
     return any(re.search(regex, value, re.I | re.M) for value in strings)
 
 
-def parallel_dataframe(df, func, num_cores=mp.cpu_count()):
+def parallel_dataframe(df: pd.DataFrame, func, num_cores:int = mp.cpu_count()) -> pd.DataFrame:
     df_split = np.array_split(df, num_cores)
     pool = mp.Pool(num_cores)
     df = pd.concat(pool.map(func, df_split))
@@ -248,7 +275,7 @@ def parallel_dataframe(df, func, num_cores=mp.cpu_count()):
     return df
 
 
-def load_water_dataframe():
+def load_water_dataframe() -> pd.DataFrame:
     
     # Declare the columns and types we will load from Water_FINAL.csv
     columns = {
@@ -280,107 +307,24 @@ def load_water_dataframe():
     return df
 
 
-def load_geo_dataframe():
-    # Read in the HUC12 data as a GeoDataFrame
-    print("Loading mid_atlantic.gdf...")
-    gdf = gpd.read_file("..\\data\\huc12\\mid_atlantic.gdf")
-    gdf["HUC12"] = gdf["HUC12"].astype("int64")
-
-    print("Adding features to DataFrame...")
-    gdf = parallel_dataframe(gdf, __add_features_to_geo_dataframe)
-
-    print("Finished loading and processing dataframe")
-    return gdf
+def load_geo_dataframe() -> pd.DataFrame:
+    return __load_pickle("../data/compressed/geo.pkl.gzip")
 
 
-def load_huc_gaps():
-    
-    print("Loading huc12_gaps.csv...")
-    columns = {
-        "HUC12": str,
-        "HUCName": str,
-        "Station": str,
-        "StationCode": str,
-        "State": str,
-        "County": str,
-        "Latitude": "float64",
-        "Longitude": "float64",
-        "Organization": "int64",
-        "PropertyValue": "int64",
-        "PropertyName": str,
-        "Start": str,
-        "Finish": str,
-        "Elapsed": str
-    }
-
-    df = pd.read_csv("..\\data\\huc12_gaps.csv", usecols=columns.keys(), dtype=columns)
-
-    print("Adding features to DataFrame...")
-    df["Start"] = pd.to_datetime(df["Start"])
-    df["Finish"] = pd.to_datetime(df["Finish"])
-    df["Elapsed"] = pd.to_timedelta(df["Elapsed"])
-    df["HUC12Number"] = pd.to_numeric(df["HUC12"])
-
-    print("Finished loading and processing dataframe")
-    return df
+def load_huc_gaps() -> pd.DataFrame:
+    return __load_pickle("../data/compressed/huc_gaps.pkl.gzip")
 
 
-def load_station_gaps():
-    
-    print("Loading station_gaps.csv...")
-    columns = {
-        "HUC12": str,
-        "HUCName": str,
-        "Station": str,
-        "StationCode": str,
-        "State": str,
-        "County": str,
-        "Latitude": "float64",
-        "Longitude": "float64",
-        "Organization": "int64",
-        "PropertyValue": "int64",
-        "PropertyName": str,
-        "Start": str,
-        "Finish": str,
-        "Elapsed": str
-    }
-
-    df = pd.read_csv("..\\data\\station_gaps.csv", usecols=columns.keys(), dtype=columns)
-
-    print("Adding features to DataFrame...")
-    df["Start"] = pd.to_datetime(df["Start"])
-    df["Finish"] = pd.to_datetime(df["Finish"])
-    df["Elapsed"] = pd.to_timedelta(df["Elapsed"])
-    df["HUC12Number"] = pd.to_numeric(df["HUC12"])
-
-    print("Finished loading and processing dataframe")
-    return df
+def load_station_gaps() -> pd.DataFrame:
+    return __load_pickle("../data/compressed/station_gaps.pkl.gzip")
 
 
-def load_stations():
-    
-    print("Loading stations.csv...")
-    columns = {
-        "HUC12": str,
-        "HUCName": str,
-        "Station": str,
-        "StationCode": str,
-        "State": str,
-        "County": str,
-        "Latitude": "float64",
-        "Longitude": "float64",
-        "Organization": "int64"
-    }
+def load_summary() -> pd.DataFrame:
+    return __load_pickle("../data/compressed/summary.pkl.gzip")
 
-    df = pd.read_csv("..\\data\\stations.csv", usecols=columns.keys(), dtype=columns)
-
-    print("Adding features to DataFrame...")
-    df["HUC12Number"] = pd.to_numeric(df["HUC12"])
-
-    print("Finished loading and processing dataframe")
-    return df
+def load_land_cover() -> pd.DataFrame:
+    return __load_pickle("../data/compressed/land_cover.pkl.gzip")
 
 
 if __name__ == "__main__":
-
     __create_dataframes()
