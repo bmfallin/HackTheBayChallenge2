@@ -11,10 +11,15 @@ Please make sure you are using Python version 3.8.5. Parts of the code rely on f
 
 #### Create Environment
 
-After installing Anaconda, navigate to the `src` directory of this repository, and create the Anaconda environment by executing the following command in a terminal.
-```
-conda env create -f environment.yml
-```
+There are 2 different environment files - one for Mac and one for Windows - and you should use the one that is specific to your operating system.
+After installing Anaconda, navigate to the `src` directory of this repository, and create the Anaconda environment by executing the following command in a terminal:
+
+If you are on Windows, run 
+```conda env create -f environment.yml```
+
+If you are on a Mac, run 
+```conda env create -f environment_mac.yml```
+
 
 #### Activate Environment
 
