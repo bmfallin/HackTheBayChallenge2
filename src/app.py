@@ -3,14 +3,14 @@ import data
 
 # Define the stylesheet
 external_stylesheets = [
-    ".\\assets\\stylesheets\\stylesheet.css",
-    ".\\assets\\stylesheets\\buttons.css",
-    ".\\assets\\stylesheets\\data-table.css",
-    ".\\assets\\stylesheets\\date-range.css",
-    ".\\assets\\stylesheets\\navigation.css",
-    ".\\assets\\stylesheets\\select-menu.css",
-    ".\\assets\\stylesheets\\sliders.css",
-    ".\\assets\\stylesheets\\spinners.css"
+    "./assets/stylesheets/stylesheet.css",
+    "./assets/stylesheets/buttons.css",
+    "./assets/stylesheets/data-table.css",
+    "./assets/stylesheets/date-range.css",
+    "./assets/stylesheets/navigation.css",
+    "./assets/stylesheets/select-menu.css",
+    "./assets/stylesheets/sliders.css",
+    "./assets/stylesheets/spinners.css"
 ]
 
 # Define the dash app

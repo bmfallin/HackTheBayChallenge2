@@ -58,7 +58,7 @@ def __create_dataframes():
         "STATE_": "State",
         "COUNTY_": "County"
     })
-    huc_gaps_df.to_csv("..\\data\\huc12_gaps.csv")
+    huc_gaps_df.to_csv("../data/huc12_gaps.csv")
 
     codes = water_df["StationCode"].unique()
     codes = [c for c in codes if str(c) != "nan"]
@@ -71,7 +71,7 @@ def __create_dataframes():
         "STATE_": "State",
         "COUNTY_": "County"
     })
-    station_gaps_df.to_csv("..\\data\\station_gaps.csv")
+    station_gaps_df.to_csv("../data/station_gaps.csv")
 
     stations_df = join_df.groupby(["StationCode"]).first().reset_index()
     stations_df = stations_df.rename(columns={
@@ -80,7 +80,7 @@ def __create_dataframes():
         "STATE_": "State",
         "COUNTY_": "County"
     })
-    stations_df.to_csv("..\\data\\stations.csv")
+    stations_df.to_csv("../data/stations.csv")
 
 
 def __create_dataframe_from_gaps(df, field_name, unique_fields, start, end, add_features):
@@ -270,7 +270,7 @@ def load_water_dataframe():
 
     # Read the Water_FINAL.csv into a dataframe 
     print("Loading Water_FINAL.csv...")
-    df = pd.read_csv("..\\data\\Water_FINAL.csv", usecols=columns.keys(), dtype=columns)
+    df = pd.read_csv("../data/Water_FINAL.csv", usecols=columns.keys(), dtype=columns)
 
     # Add features to our dataframe
     print("Adding features to DataFrame...")
@@ -283,7 +283,7 @@ def load_water_dataframe():
 def load_geo_dataframe():
     # Read in the HUC12 data as a GeoDataFrame
     print("Loading mid_atlantic.gdf...")
-    gdf = gpd.read_file("..\\data\\huc12\\mid_atlantic.gdf")
+    gdf = gpd.read_file("../data/huc12/mid_atlantic.gdf")
     gdf["HUC12"] = gdf["HUC12"].astype("int64")
 
     print("Adding features to DataFrame...")
@@ -313,7 +313,7 @@ def load_huc_gaps():
         "Elapsed": str
     }
 
-    df = pd.read_csv("..\\data\\huc12_gaps.csv", usecols=columns.keys(), dtype=columns)
+    df = pd.read_csv("../data/huc12_gaps.csv", usecols=columns.keys(), dtype=columns)
 
     print("Adding features to DataFrame...")
     df["Start"] = pd.to_datetime(df["Start"])
@@ -345,7 +345,7 @@ def load_station_gaps():
         "Elapsed": str
     }
 
-    df = pd.read_csv("..\\data\\station_gaps.csv", usecols=columns.keys(), dtype=columns)
+    df = pd.read_csv("../data/station_gaps.csv", usecols=columns.keys(), dtype=columns)
 
     print("Adding features to DataFrame...")
     df["Start"] = pd.to_datetime(df["Start"])
@@ -372,7 +372,7 @@ def load_stations():
         "Organization": "int64"
     }
 
-    df = pd.read_csv("..\\data\\stations.csv", usecols=columns.keys(), dtype=columns)
+    df = pd.read_csv("../data/stations.csv", usecols=columns.keys(), dtype=columns)
 
     print("Adding features to DataFrame...")
     df["HUC12Number"] = pd.to_numeric(df["HUC12"])
